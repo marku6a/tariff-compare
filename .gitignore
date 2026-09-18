@@ -1,0 +1,17 @@
+# Local data and generated artifacts
+data/
+warehouse/
+
+# dbt generated files
+dbt/target/
+dbt/logs/
+dbt/profiles.yml
+
+# Python environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment overrides
+.env

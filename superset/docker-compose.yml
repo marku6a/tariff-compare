@@ -1,0 +1,7 @@
+services:
+  superset:
+    build: .
+    volumes:
+      - ../warehouse:/app/warehouse:ro
+    # Superset configuration, metadata storage, and its DuckDB connection are
+    # intentionally deferred until the dashboard implementation phase.
