@@ -1,7 +1,7 @@
 .PHONY: ingest validate transform pipeline dashboard test
 
 ingest:
-	python -m python.ingest
+	uv run python -m ingestion.cli
 
 validate:
 	cd dbt && dbt build --select path:models/staging,path:models/validation
@@ -15,4 +15,4 @@ dashboard:
 	docker compose -f superset/docker-compose.yml up --build
 
 test:
-	pytest
+	uv run pytest

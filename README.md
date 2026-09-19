@@ -18,7 +18,7 @@ and writes dashboard-ready models to the analytics database.
 - `data/contracts/` — input data contracts for manually maintained files.
 - `data/templates/` — copyable CSV templates; do not place these in `landing/`.
 - `warehouse/` — local DuckDB database files (ignored by Git).
-- `python/` — thin ingestion application.
+- `src/ingestion/` — installable, thin ingestion application.
 - `dbt/` — validation and transformation project.
 - `superset/` — local Superset container configuration.
 - `tests/` — Python ingestion tests.
@@ -35,3 +35,16 @@ make dashboard
 
 See `dbt/profiles.yml.example` for the intended read-only raw-database attachment.
 See `data/contracts/tariff_csv.md` for the manually entered tariff CSV contract.
+
+## Python ingestion boundary
+
+The Python application is deliberately limited to selecting a source provider,
+checking that a file is readable and structurally recognised, attaching
+ingestion metadata, and loading source values into `raw.duckdb`. It preserves
+source values rather than casting or applying business rules. dbt owns type
+conversion, validation, deduplication, and tariff-cost transformations.
+
+The package uses a `src/` layout and can be invoked with
+`uv run python -m ingestion.cli`. Provider adapters live in
+`src/ingestion/providers/`; add a new adapter when a different source export
+format arrives.
