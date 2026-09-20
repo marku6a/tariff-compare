@@ -1,0 +1,4 @@
+﻿supply_fid,ts_utc,sequence_num,value_Wh,ts_tma_knew_utc,is_latest,created_at_utc,_peerdb_synced_at,_peerdb_is_deleted,_peerdb_version,interval_status,version
+9672a909-fe74-49ae-bf00-84c82b4edd47,"September 14, 2026, 21:00",0,140,"January 1, 1970, 00:00",true,"September 14, 2026, 21:21","September 14, 2026, 21:21",0,"1,789,420,881,910,711,492",NOT_APPLICABLE,0
+9672a909-fe74-49ae-bf00-84c82b4edd47,"September 14, 2026, 20:30",0,141,"January 1, 1970, 00:00",true,"September 14, 2026, 21:21","September 14, 2026, 21:21",0,"1,789,420,881,910,698,955",NOT_APPLICABLE,0
+9672a909-fe74-49ae-bf00-84c82b4edd47,"September 14, 2026, 20:00",0,166,"January 1, 1970, 00:00",true,"September 14, 2026, 21:21","September 14, 2026, 21:21",0,"1,789,420,881,910,686,910",NOT_APPLICABLE,0
