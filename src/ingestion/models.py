@@ -31,7 +31,7 @@ class RawBatch:
                 unexpected = actual_keys - expected_keys
 
                 raise ValueError(
-                    f"Row is {row_number} does not match headers. "
+                    f"Row {row_number} does not match headers. "
                     f"Missing: {sorted(missing)}. "
                     f"Unexpected: {sorted(unexpected)}."
                 )

@@ -1,5 +1,6 @@
+import pytest
+import csv
 from pathlib import Path
-
 from ingestion.providers import fuse
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse_valid.csv"
@@ -41,3 +42,34 @@ def test_reads_fuse_fixture():
         "interval_status": "NOT_APPLICABLE",
         "version": "0",
     }
+
+REQUIRED_FUSE_HEADERS = (
+    "supply_fid",
+    "ts_utc",
+    "value_Wh",
+)
+
+
+@pytest.mark.parametrize("missing_header", REQUIRED_FUSE_HEADERS)
+def test_rejects_missing_required_fuse_header(
+    tmp_path: Path,
+    missing_header: str,
+):
+    headers = [
+        header
+        for header in REQUIRED_FUSE_HEADERS
+        if header != missing_header
+    ]
+
+    source = tmp_path / "missing_header.csv"
+
+    with source.open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+        writer.writerow({header: "example" for header in headers})
+
+    with pytest.raises(
+        ValueError,
+        match=rf"Missing required Fuse headers:.*{missing_header}",
+    ):
+        fuse.read(source)
