@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 from ingestion.providers import fuse
 
-FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse_valid.csv"
+FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse" / "valid.csv"
 
 def test_reads_fuse_fixture():
     batch = fuse.read(FIXTURE)
