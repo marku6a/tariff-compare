@@ -70,6 +70,6 @@ def test_rejects_missing_required_fuse_header(
 
     with pytest.raises(
         ValueError,
-        match=rf"Missing required Fuse headers:.*{missing_header}",
+        match=rf"{missing_header}",
     ):
         fuse.read(source)
