@@ -5,26 +5,29 @@ from ingestion.providers import fuse
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse" / "valid.csv"
 
+FUSE_HEADERS = (
+    "supply_fid",
+    "ts_utc",
+    "sequence_num",
+    "value_Wh",
+    "ts_tma_knew_utc",
+    "is_latest",
+    "created_at_utc",
+    "_peerdb_synced_at",
+    "_peerdb_is_deleted",
+    "_peerdb_version",
+    "interval_status",
+    "version",
+)
+
+
 def test_reads_fuse_fixture():
     batch = fuse.read(FIXTURE)
 
     assert batch.provider == "fuse"
     assert batch.source_kind == "meter_readings"
 
-    assert batch.headers == (
-        "supply_fid",
-        "ts_utc",
-        "sequence_num",
-        "value_Wh",
-        "ts_tma_knew_utc",
-        "is_latest",
-        "created_at_utc",
-        "_peerdb_synced_at",
-        "_peerdb_is_deleted",
-        "_peerdb_version",
-        "interval_status",
-        "version",
-    )
+    assert batch.headers == FUSE_HEADERS
 
     assert len(batch.rows) == 3
 
@@ -43,21 +46,14 @@ def test_reads_fuse_fixture():
         "version": "0",
     }
 
-REQUIRED_FUSE_HEADERS = (
-    "supply_fid",
-    "ts_utc",
-    "value_Wh",
-)
-
-
-@pytest.mark.parametrize("missing_header", REQUIRED_FUSE_HEADERS)
-def test_rejects_missing_required_fuse_header(
+@pytest.mark.parametrize("missing_header", FUSE_HEADERS)
+def test_rejects_missing_fuse_header(
     tmp_path: Path,
     missing_header: str,
 ):
     headers = [
         header
-        for header in REQUIRED_FUSE_HEADERS
+        for header in FUSE_HEADERS
         if header != missing_header
     ]
 
@@ -73,3 +69,28 @@ def test_rejects_missing_required_fuse_header(
         match=rf"{missing_header}",
     ):
         fuse.read(source)
+
+
+def test_rejects_unexpected_fuse_header(tmp_path: Path):
+    source = tmp_path / "unexpected_header.csv"
+    headers = (*FUSE_HEADERS, "extra_column")
+
+    with source.open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+        writer.writerow({header: "example" for header in headers})
+
+    with pytest.raises(ValueError, match="extra_column"):
+        fuse.read(source)
+
+
+def test_accepts_reordered_fuse_headers(tmp_path: Path):
+    source = tmp_path / "reordered_headers.csv"
+    headers = tuple(reversed(FUSE_HEADERS))
+
+    with source.open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+        writer.writerow({header: "example" for header in headers})
+
+    assert fuse.read(source).headers == headers
