@@ -7,6 +7,7 @@ SourceKind = Literal["meter_readings", "tariff"]
 RawValue = str | None
 RawRow = Mapping[str, RawValue]
 
+
 @dataclass(frozen=True, slots=True)
 class RawBatch:
     # A source file read without interpretation
@@ -35,3 +36,5 @@ class RawBatch:
                     f"Missing: {sorted(missing)}. "
                     f"Unexpected: {sorted(unexpected)}."
                 )
+        if self.source_kind not in ("meter_readings", "tariff"):
+            raise ValueError("Source kind should be 'meter_readings' or 'tariff'.")
