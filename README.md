@@ -38,11 +38,15 @@ See `data/contracts/tariff_csv.md` for the manually entered tariff CSV contract.
 
 ## Python ingestion boundary
 
-The Python application is deliberately limited to selecting a source provider,
-checking that a file is readable and structurally recognised, attaching
-ingestion metadata, and loading source values into `raw.duckdb`. It preserves
-source values rather than casting or applying business rules. dbt owns type
-conversion, validation, deduplication, and tariff-cost transformations.
+The Python application selects a source provider, checks that a file is
+structurally recognised, maps provider column names to stable raw column names,
+and loads source values into `raw.duckdb` with ingestion metadata. Meter-reading
+providers output `meter_id`, `interval_timestamp`, `energy_value`,
+the timestamp boundary and time zone, the energy unit, interval duration and a JSON string of
+provider-only values in `source_fields`.
+dbt parses timestamps and numbers, places readings on a common interval boundary, converts units, and applies validation
+and tariff-cost rules. The processed file archive will retain the
+original CSV header names and file contents.
 
 The package uses a `src/` layout and can be invoked with
 `uv run python -m ingestion.cli`. Provider adapters live in
