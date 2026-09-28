@@ -3,6 +3,7 @@ import csv
 import json
 from pathlib import Path
 from ingestion.providers import fuse
+from ingestion.raw_schema import RAW_SCHEMA_HEADERS
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse" / "valid.csv"
 
@@ -25,13 +26,6 @@ REQUIRED_FUSE_HEADERS = (
     "supply_fid",
     "ts_utc",
     "value_Wh",
-)
-
-RAW_SCHEMA_HEADERS = (
-    "meter_id",
-    "interval_timestamp",
-    "energy_value",
-    "source_fields",
 )
 
 
