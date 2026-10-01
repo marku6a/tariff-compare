@@ -7,7 +7,7 @@ from ingestion.raw_schema import RAW_SCHEMA_HEADERS
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse" / "valid.csv"
 
-FUSE_HEADERS = (
+EXAMPLE_FUSE_HEADERS = (
     "supply_fid",
     "ts_utc",
     "sequence_num",
@@ -124,7 +124,7 @@ def test_accepts_unexpected_fuse_header(tmp_path: Path):
 
 def test_accepts_reordered_fuse_headers(tmp_path: Path):
     source = tmp_path / "reordered_headers.csv"
-    headers = tuple(reversed(FUSE_HEADERS))
+    headers = tuple(reversed(EXAMPLE_FUSE_HEADERS))
 
     with source.open("w", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=headers)
@@ -138,7 +138,9 @@ def test_accepts_reordered_fuse_headers(tmp_path: Path):
     assert batch.rows[0]["interval_timestamp"] == "ts_utc"
     assert batch.rows[0]["energy_value"] == "value_Wh"
     assert json.loads(str(batch.rows[0]["source_fields"])) == {
-        header: header for header in FUSE_HEADERS if header not in REQUIRED_FUSE_HEADERS
+        header: header
+        for header in EXAMPLE_FUSE_HEADERS
+        if header not in REQUIRED_FUSE_HEADERS
     }
 
 
@@ -147,10 +149,10 @@ def test_rejects_structurally_short_provider_only_field(tmp_path: Path):
 
     with source.open("w", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(FUSE_HEADERS)
-        writer.writerow(["example"] * (len(FUSE_HEADERS) - 1))
+        writer.writerow(EXAMPLE_FUSE_HEADERS)
+        writer.writerow(["example"] * (len(EXAMPLE_FUSE_HEADERS) - 1))
 
-    missing_header = FUSE_HEADERS[-1]
+    missing_header = EXAMPLE_FUSE_HEADERS[-1]
     assert missing_header not in REQUIRED_FUSE_HEADERS
     with pytest.raises(ValueError, match=missing_header):
         fuse.read(source)
