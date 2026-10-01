@@ -27,6 +27,15 @@ class RawBatch:
     rows: tuple[RawRow, ...]
 
     def __post_init__(self) -> None:
+        self._validate_source_kind()
+        self._validate_row_structure()
+        self._validate_metadata()
+
+    def _validate_source_kind(self) -> None:
+        if self.source_kind not in get_args(SourceKind):
+            raise ValueError("Invalid source kind")
+
+    def _validate_row_structure(self) -> None:
         if len(self.headers) != len(set(self.headers)):
             raise ValueError("Headers must be unique.")
 
@@ -44,42 +53,43 @@ class RawBatch:
                     f"Missing: {sorted(missing)}. "
                     f"Unexpected: {sorted(unexpected)}."
                 )
-        if self.source_kind not in get_args(SourceKind):
-            raise ValueError("Invalid source kind")
 
+    def _validate_metadata(self) -> None:
         if self.source_kind == "meter_readings":
-            # meter_readings checks
-            if self.timestamp_boundary not in get_args(TimestampBoundary):
-                raise ValueError("Invalid timestamp boundary")
-
-            if self.energy_unit not in get_args(EnergyUnit):
-                raise ValueError("Invalid energy unit")
-
-            if (
-                not isinstance(self.timestamp_timezone, str)
-                or not self.timestamp_timezone.strip()
-            ):
-                raise ValueError("Meter readings should have a nonblank timezone")
-
-            if (
-                not isinstance(self.interval_duration_minutes, int)
-                or isinstance(self.interval_duration_minutes, bool)
-                or self.interval_duration_minutes <= 0
-            ):
-                raise ValueError(
-                    "Meter readings should have a positive interval duration"
-                )
+            self._validate_meter_metadata()
 
         if self.source_kind == "tariff":
-            # tariff checks
-            if self.timestamp_boundary is not None:
-                raise ValueError("Tariff should not have timestamp boundary")
+            self._validate_tariff_metadata()
 
-            if self.energy_unit is not None:
-                raise ValueError("Tariff should not have energy unit")
+    def _validate_meter_metadata(self) -> None:
+        if self.timestamp_boundary not in get_args(TimestampBoundary):
+            raise ValueError("Invalid timestamp boundary")
 
-            if self.timestamp_timezone is not None:
-                raise ValueError("Tariff should not have timezone")
+        if self.energy_unit not in get_args(EnergyUnit):
+            raise ValueError("Invalid energy unit")
 
-            if self.interval_duration_minutes is not None:
-                raise ValueError("Tariff should not have interval duration")
+        if (
+            not isinstance(self.timestamp_timezone, str)
+            or not self.timestamp_timezone.strip()
+        ):
+            raise ValueError("Meter readings should have a nonblank timezone")
+
+        if (
+            not isinstance(self.interval_duration_minutes, int)
+            or isinstance(self.interval_duration_minutes, bool)
+            or self.interval_duration_minutes <= 0
+        ):
+            raise ValueError("Meter readings should have a positive interval duration")
+
+    def _validate_tariff_metadata(self) -> None:
+        if self.timestamp_boundary is not None:
+            raise ValueError("Tariff should not have timestamp boundary")
+
+        if self.energy_unit is not None:
+            raise ValueError("Tariff should not have energy unit")
+
+        if self.timestamp_timezone is not None:
+            raise ValueError("Tariff should not have timezone")
+
+        if self.interval_duration_minutes is not None:
+            raise ValueError("Tariff should not have interval duration")
