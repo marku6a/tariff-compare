@@ -1,6 +1,6 @@
 """Stable source-level column names shared by meter-reading providers."""
 
-RAW_SCHEMA_HEADERS = (
+METER_READINGS_RAW_HEADERS = (
     "meter_id",
     "interval_timestamp",
     "energy_value",

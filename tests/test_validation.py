@@ -4,7 +4,7 @@ import pytest
 
 from ingestion.models import RawBatch, RawValue
 from ingestion.validation import validate_batch
-from ingestion.raw_schema import RAW_SCHEMA_HEADERS
+from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
 
 
 def test_rejects_batch_without_rows():
@@ -16,7 +16,7 @@ def test_rejects_batch_without_rows():
         timestamp_timezone="Europe/London",
         energy_unit="wh",
         interval_duration_minutes=30,
-        headers=RAW_SCHEMA_HEADERS,
+        headers=METER_READINGS_RAW_HEADERS,
         rows=(),
     )
 
@@ -55,7 +55,7 @@ def test_rejects_row_with_structurally_missing_value(
         timestamp_timezone="Europe/London",
         energy_unit="wh",
         interval_duration_minutes=30,
-        headers=RAW_SCHEMA_HEADERS,
+        headers=METER_READINGS_RAW_HEADERS,
         rows=tuple(rows),
     )
 
@@ -83,7 +83,7 @@ def test_accepts_empty_strings():
         timestamp_timezone="Europe/London",
         energy_unit="wh",
         interval_duration_minutes=30,
-        headers=RAW_SCHEMA_HEADERS,
+        headers=METER_READINGS_RAW_HEADERS,
         rows=rows,
     )
     validate_batch(batch)

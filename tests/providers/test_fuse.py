@@ -3,7 +3,7 @@ import csv
 import json
 from pathlib import Path
 from ingestion.providers import fuse
-from ingestion.raw_schema import RAW_SCHEMA_HEADERS
+from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "fuse" / "valid.csv"
 
@@ -35,7 +35,7 @@ def test_reads_fuse_fixture():
     assert batch.provider == "fuse"
     assert batch.source_kind == "meter_readings"
 
-    assert batch.headers == RAW_SCHEMA_HEADERS
+    assert batch.headers == METER_READINGS_RAW_HEADERS
 
     assert len(batch.rows) == 3
 
@@ -95,7 +95,7 @@ def test_accepts_missing_optional_headers(
 
     batch = fuse.read(source)
 
-    assert batch.headers == RAW_SCHEMA_HEADERS
+    assert batch.headers == METER_READINGS_RAW_HEADERS
     assert batch.rows[0]["meter_id"] == "example"
     assert batch.rows[0]["interval_timestamp"] == "example"
     assert batch.rows[0]["energy_value"] == "example"
@@ -113,7 +113,7 @@ def test_accepts_unexpected_fuse_header(tmp_path: Path):
 
     batch = fuse.read(source)
 
-    assert batch.headers == RAW_SCHEMA_HEADERS
+    assert batch.headers == METER_READINGS_RAW_HEADERS
     assert batch.rows[0]["meter_id"] == "supply_fid"
     assert batch.rows[0]["interval_timestamp"] == "ts_utc"
     assert batch.rows[0]["energy_value"] == "value_Wh"
@@ -133,7 +133,7 @@ def test_accepts_reordered_fuse_headers(tmp_path: Path):
 
     batch = fuse.read(source)
 
-    assert batch.headers == RAW_SCHEMA_HEADERS
+    assert batch.headers == METER_READINGS_RAW_HEADERS
     assert batch.rows[0]["meter_id"] == "supply_fid"
     assert batch.rows[0]["interval_timestamp"] == "ts_utc"
     assert batch.rows[0]["energy_value"] == "value_Wh"

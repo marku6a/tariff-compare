@@ -1,6 +1,6 @@
-from ingestion.raw_schema import RAW_SCHEMA_HEADERS
+from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
 
-EXPECTED_RAW_SCHEMA_HEADERS = (
+EXPECTED_METER_READINGS_RAW_HEADERS = (
     "meter_id",
     "interval_timestamp",
     "energy_value",
@@ -8,5 +8,5 @@ EXPECTED_RAW_SCHEMA_HEADERS = (
 )
 
 
-def test_raw_schema():
-    assert RAW_SCHEMA_HEADERS == EXPECTED_RAW_SCHEMA_HEADERS
+def test_meter_readings_raw_schema():
+    assert METER_READINGS_RAW_HEADERS == EXPECTED_METER_READINGS_RAW_HEADERS

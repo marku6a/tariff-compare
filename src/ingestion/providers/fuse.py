@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from ingestion.models import RawBatch
-from ingestion.raw_schema import RAW_SCHEMA_HEADERS
+from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
 from ingestion.validation import validate_batch
 
 FUSE_TO_RAW_HEADERS = {
@@ -69,6 +69,6 @@ def read(source: Path) -> RawBatch:
         timestamp_timezone="UTC",
         energy_unit="wh",
         interval_duration_minutes=30,
-        headers=RAW_SCHEMA_HEADERS,
+        headers=METER_READINGS_RAW_HEADERS,
         rows=raw_rows,
     )
