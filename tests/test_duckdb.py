@@ -42,7 +42,7 @@ def meter_batch() -> RawBatch:
 def test_writes_meter_readings_and_ingestion_metadata(
     tmp_path: Path, meter_batch: RawBatch
 ):
-    database_path = tmp_path / "raw.duckdb"
+    database_path = tmp_path / "raw_source.duckdb"
     import_id = UUID("12345678-1234-5678-1234-567812345678")
     ingested_at = datetime(2026, 9, 21, 10, 30, tzinfo=UTC)
 
@@ -167,7 +167,7 @@ def test_writes_meter_readings_and_ingestion_metadata(
 def test_rejects_noncanonical_headers(
     tmp_path: Path, meter_batch: RawBatch, headers, row
 ):
-    database_path = tmp_path / "raw.duckdb"
+    database_path = tmp_path / "raw_source.duckdb"
     import_id = UUID("12345678-1234-5678-1234-567812345678")
     ingested_at = datetime(2026, 9, 21, 10, 30, tzinfo=UTC)
 

@@ -4,7 +4,7 @@ A local batch pipeline for comparing electricity-tariff costs.
 
 ## Architecture
 
-`CSV files → Python ingestion → raw.duckdb → dbt → analytics.duckdb → Superset`
+`CSV files → Python ingestion → raw_source.duckdb → dbt → analytics.duckdb → Superset`
 
 Python is intentionally limited to landing files and recording ingestion metadata.
 dbt attaches the raw database read-only, performs validation and transformations,
@@ -40,7 +40,7 @@ See `data/contracts/tariff_csv.md` for the manually entered tariff CSV contract.
 
 The Python application selects a source provider, checks that a file is
 structurally recognised, maps provider column names to stable raw column names,
-and loads source values into `raw.duckdb` with ingestion metadata. Meter-reading
+and loads source values into `raw_source.duckdb` with ingestion metadata. Meter-reading
 providers output `meter_id`, `interval_timestamp`, `energy_value`,
 the timestamp boundary and time zone, the energy unit, interval duration and a JSON string of
 provider-only values in `source_fields`.
