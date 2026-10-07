@@ -6,5 +6,5 @@ sources:
     schema: raw
     tables:
       - name: ingestion_files
-      - name: usage_csv
-      - name: tariff_csv
+      - name: meter_readings
+      - name: tariffs

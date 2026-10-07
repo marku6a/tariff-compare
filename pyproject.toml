@@ -8,6 +8,7 @@ dependencies = [
     "dbt-core>=1.12.5",
     "dbt-duckdb>=1.11.0",
     "duckdb>=1.5.5",
+    "pyarrow>=25.0.1",
 ]
 
 [build-system]
@@ -19,5 +20,6 @@ packages = ["src/ingestion"]
 
 [dependency-groups]
 dev = [
+    "pyarrow-stubs>=20.0.0.20260819",
     "pytest>=9.1.1",
 ]
