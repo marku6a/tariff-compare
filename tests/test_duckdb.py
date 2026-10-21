@@ -180,6 +180,48 @@ def test_writes_meter_readings_and_ingestion_metadata(
         }
 
 
+def test_rolls_back_raw_rows_when_metadata_insert_fails(
+    tmp_path: Path, meter_batch: RawBatch
+):
+    database_path = tmp_path / "raw_source.duckdb"
+    import_id = UUID(int=1)
+    ingested_at = datetime(2026, 9, 21, tzinfo=UTC)
+
+    write_batch(
+        database_path,
+        meter_batch,
+        import_id=import_id,
+        source_sha256="original",
+        ingested_at=ingested_at,
+    )
+
+    with duckdb.connect(str(database_path), read_only=True) as connection:
+        original_rows = connection.execute("""
+            SELECT * FROM raw.meter_readings ORDER BY source_row_number
+            """).fetchall()
+        original_metadata = connection.execute("""
+            SELECT * FROM raw.ingestion_files
+            """).fetchall()
+
+    # Raw rows allow repeated import IDs; metadata's primary key rejects them.
+    with pytest.raises(duckdb.ConstraintException, match="Duplicate key"):
+        write_batch(
+            database_path,
+            meter_batch,
+            import_id=import_id,
+            source_sha256="retry",
+            ingested_at=ingested_at,
+        )
+
+    with duckdb.connect(str(database_path), read_only=True) as connection:
+        assert connection.execute("""
+            SELECT * FROM raw.meter_readings ORDER BY source_row_number
+            """).fetchall() == original_rows
+        assert connection.execute("""
+            SELECT * FROM raw.ingestion_files
+            """).fetchall() == original_metadata
+
+
 def test_writes_values_to_named_columns_with_reversed_headers(
     tmp_path: Path, meter_batch: RawBatch
 ):

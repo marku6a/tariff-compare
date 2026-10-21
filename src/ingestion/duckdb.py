@@ -101,46 +101,51 @@ def write_batch(
     with duckdb.connect(database_path) as con:
         ensure_raw_tables(con)
 
-        # insert batch data
+        # prepare batch and metadata
         source_columns = ", ".join(expected_headers)
-        con.execute(
-            f"""
-            INSERT INTO {target_table}
-                ({source_columns}, import_id, source_row_number)
-            SELECT {source_columns}, ?::UUID, source_row_number
-            FROM pa_table
-            """,
-            [str(import_id)],
-        )
+        raw_rows_sql = f"""
+                    INSERT INTO {target_table}
+                        ({source_columns}, import_id, source_row_number)
+                    SELECT {source_columns}, ?::UUID, source_row_number
+                    FROM pa_table
+                    """
+        raw_rows_params = [str(import_id)]
 
-        # insert ingestion file data
-        con.execute(
-            f"""
-            INSERT INTO raw.ingestion_files (
-                import_id,
-                provider,
-                source_kind,
-                source_path,
-                source_sha256,
-                row_count,
-                timestamp_boundary,
-                timestamp_timezone,
-                energy_unit,
-                interval_duration_minutes,
-                ingested_at)
-            VALUES (?::UUID, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                str(import_id),
-                batch.provider,
-                batch.source_kind,
-                str(batch.source_path),
-                source_sha256,
-                pa_table.num_rows,
-                batch.timestamp_boundary,
-                batch.timestamp_timezone,
-                batch.energy_unit,
-                batch.interval_duration_minutes,
-                ingested_at,
-            ],
-        )
+        metadata_sql = f"""
+                    INSERT INTO raw.ingestion_files (
+                        import_id,
+                        provider,
+                        source_kind,
+                        source_path,
+                        source_sha256,
+                        row_count,
+                        timestamp_boundary,
+                        timestamp_timezone,
+                        energy_unit,
+                        interval_duration_minutes,
+                        ingested_at)
+                    VALUES (?::UUID, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """
+        metadata_params = [
+            str(import_id),
+            batch.provider,
+            batch.source_kind,
+            str(batch.source_path),
+            source_sha256,
+            pa_table.num_rows,
+            batch.timestamp_boundary,
+            batch.timestamp_timezone,
+            batch.energy_unit,
+            batch.interval_duration_minutes,
+            ingested_at,
+        ]
+
+        # insert batch and metadata atomically
+        con.execute("BEGIN TRANSACTION")
+        try:
+            con.execute(raw_rows_sql, raw_rows_params)
+            con.execute(metadata_sql, metadata_params)
+            con.execute("COMMIT")
+        except Exception:
+            con.execute("ROLLBACK")
+            raise
