@@ -2,20 +2,22 @@ from pathlib import Path
 
 import pytest
 
-from ingestion.models import RawBatch, RawValue
+from ingestion.models import MeterReadingMetadata, RawBatch, RawValue
 from ingestion.validation import validate_batch
 from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
 
 
 def test_rejects_batch_without_rows():
     batch = RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=Path("header_only.csv"),
-        timestamp_boundary="end",
-        timestamp_timezone="Europe/London",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="Europe/London",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=METER_READINGS_RAW_HEADERS,
         rows=(),
     )
@@ -48,13 +50,15 @@ def test_rejects_row_with_structurally_missing_value(
     rows[bad_row_index][bad_header] = None
 
     batch = RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=Path("short_row.csv"),
-        timestamp_boundary="end",
-        timestamp_timezone="Europe/London",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="Europe/London",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=METER_READINGS_RAW_HEADERS,
         rows=tuple(rows),
     )
@@ -76,13 +80,15 @@ def test_accepts_empty_strings():
     )
 
     batch = RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=Path("header_only.csv"),
-        timestamp_boundary="end",
-        timestamp_timezone="Europe/London",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="Europe/London",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=METER_READINGS_RAW_HEADERS,
         rows=rows,
     )

@@ -2,7 +2,7 @@ import csv
 import json
 from pathlib import Path
 
-from ingestion.models import RawBatch
+from ingestion.models import MeterReadingMetadata, RawBatch
 from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
 from ingestion.validation import validate_batch
 
@@ -31,13 +31,15 @@ def read(source: Path) -> RawBatch:
         rows = tuple(dict(row) for row in reader)
 
     source_batch = RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=source,
-        timestamp_boundary="end",
-        timestamp_timezone="UTC",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="UTC",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=headers,
         rows=rows,
     )
@@ -62,13 +64,15 @@ def read(source: Path) -> RawBatch:
     )
 
     return RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=source,
-        timestamp_boundary="end",
-        timestamp_timezone="UTC",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="UTC",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=METER_READINGS_RAW_HEADERS,
         rows=raw_rows,
     )

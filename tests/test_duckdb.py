@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import duckdb
 import pytest
 
-from ingestion.models import RawBatch
+from ingestion.models import MeterReadingMetadata, RawBatch
 from ingestion.raw_schema import METER_READINGS_RAW_HEADERS, TARIFF_RAW_HEADERS
 from ingestion.duckdb import write_batch
 
@@ -14,13 +14,15 @@ from ingestion.duckdb import write_batch
 @pytest.fixture
 def meter_batch() -> RawBatch:
     return RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=Path("data/landing/meter_readings/example.csv"),
-        timestamp_boundary="end",
-        timestamp_timezone="UTC",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="UTC",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=METER_READINGS_RAW_HEADERS,
         rows=(
             {
@@ -42,13 +44,9 @@ def meter_batch() -> RawBatch:
 @pytest.fixture
 def tariff_batch() -> RawBatch:
     return RawBatch(
-        provider="manual",
+        source_format="tariff_csv",
         source_kind="tariff",
         source_path=Path("data/landing/tariffs/tariffs_example.csv"),
-        timestamp_boundary=None,
-        timestamp_timezone=None,
-        energy_unit=None,
-        interval_duration_minutes=None,
         headers=TARIFF_RAW_HEADERS,
         rows=(
             {
@@ -112,7 +110,7 @@ def test_writes_meter_readings_and_ingestion_metadata(
         ingestion_file = connection.execute("""
             select
                 import_id,
-                provider,
+                source_format,
                 source_kind,
                 source_path,
                 source_sha256,
@@ -159,7 +157,7 @@ def test_writes_meter_readings_and_ingestion_metadata(
         assert ingestion_file == [
             (
                 import_id,
-                "fuse",
+                "fuse_csv",
                 "meter_readings",
                 "data/landing/meter_readings/example.csv",
                 "abc123",
@@ -325,7 +323,7 @@ def test_writes_tariffs_and_ingestion_metadata(tmp_path: Path, tariff_batch: Raw
             SELECT * FROM raw.tariffs ORDER BY source_row_number
             """).fetchall()
         ingestion_file = connection.execute("""
-            SELECT import_id, provider, source_kind, source_path, source_sha256,
+            SELECT import_id, source_format, source_kind, source_path, source_sha256,
                    row_count, ingested_at, timestamp_boundary, timestamp_timezone,
                    energy_unit, interval_duration_minutes
             FROM raw.ingestion_files
@@ -344,7 +342,7 @@ def test_writes_tariffs_and_ingestion_metadata(tmp_path: Path, tariff_batch: Raw
     assert ingestion_file == [
         (
             import_id,
-            "manual",
+            "tariff_csv",
             "tariff",
             "data/landing/tariffs/tariffs_example.csv",
             "tariff123",

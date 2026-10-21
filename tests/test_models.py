@@ -3,58 +3,61 @@ from pathlib import Path
 
 import pytest
 
-from ingestion.models import RawBatch
+from ingestion.models import MeterReadingMetadata, RawBatch
+from ingestion.raw_schema import TARIFF_RAW_HEADERS
 
 
 @pytest.fixture
 def meter_batch() -> RawBatch:
     return RawBatch(
-        provider="fuse",
+        source_format="fuse_csv",
         source_kind="meter_readings",
         source_path=Path("readings.csv"),
-        timestamp_boundary="end",
-        timestamp_timezone="Europe/London",
-        energy_unit="wh",
-        interval_duration_minutes=30,
+        meter_metadata=MeterReadingMetadata(
+            timestamp_boundary="end",
+            timestamp_timezone="Europe/London",
+            energy_unit="wh",
+            interval_duration_minutes=30,
+        ),
         headers=("supply_fid", "ts_utc", "value_Wh"),
         rows=(),
     )
 
 
 @pytest.fixture
-def tariff_batch(meter_batch: RawBatch) -> RawBatch:
-    return replace(
-        meter_batch,
+def tariff_batch() -> RawBatch:
+    return RawBatch(
+        source_format="tariff_csv",
         source_kind="tariff",
-        timestamp_boundary=None,
-        timestamp_timezone=None,
-        energy_unit=None,
-        interval_duration_minutes=None,
+        source_path=Path("tariffs.csv"),
+        headers=TARIFF_RAW_HEADERS,
+        rows=(),
     )
 
 
 def test_accepts_meter_reading_metadata(meter_batch: RawBatch):
-    assert meter_batch.timestamp_boundary == "end"
-    assert meter_batch.timestamp_timezone == "Europe/London"
-    assert meter_batch.energy_unit == "wh"
-    assert meter_batch.interval_duration_minutes == 30
+    metadata = meter_batch.meter_metadata
+    assert metadata is not None
+    assert metadata.timestamp_boundary == "end"
+    assert metadata.timestamp_timezone == "Europe/London"
+    assert metadata.energy_unit == "wh"
+    assert metadata.interval_duration_minutes == 30
 
-    other_provider = replace(
-        meter_batch,
+    other_metadata = replace(
+        metadata,
         timestamp_boundary="start",
         timestamp_timezone="UTC",
         energy_unit="kwh",
         interval_duration_minutes=60,
     )
-    assert other_provider.timestamp_boundary == "start"
-    assert other_provider.energy_unit == "kwh"
+    other_batch = replace(meter_batch, meter_metadata=other_metadata)
+    assert other_batch.meter_metadata == other_metadata
+    assert other_metadata.timestamp_boundary == "start"
+    assert other_metadata.energy_unit == "kwh"
 
 
 def test_accepts_tariff_without_interval_metadata(tariff_batch: RawBatch):
-    assert tariff_batch.timestamp_boundary is None
-    assert tariff_batch.timestamp_timezone is None
-    assert tariff_batch.energy_unit is None
-    assert tariff_batch.interval_duration_minutes is None
+    assert tariff_batch.meter_metadata is None
 
 
 def test_rejects_invalid_source_kind(meter_batch: RawBatch):
@@ -82,24 +85,22 @@ def test_rejects_invalid_source_kind(meter_batch: RawBatch):
 def test_rejects_invalid_meter_metadata(
     meter_batch: RawBatch, field: str, value: object, message: str
 ):
+    assert meter_batch.meter_metadata is not None
     with pytest.raises(ValueError, match=message):
-        replace(meter_batch, **{field: value})
+        replace(meter_batch.meter_metadata, **{field: value})
 
 
-@pytest.mark.parametrize(
-    ("field", "value", "message"),
-    [
-        ("timestamp_boundary", "end", "Tariff should not have timestamp boundary"),
-        ("timestamp_timezone", "UTC", "Tariff should not have timezone"),
-        ("energy_unit", "wh", "Tariff should not have energy unit"),
-        ("interval_duration_minutes", 30, "Tariff should not have interval duration"),
-    ],
-)
+@pytest.mark.parametrize("metadata", [None, {}], ids=["missing", "wrong-type"])
+def test_rejects_meter_batch_without_valid_metadata(meter_batch: RawBatch, metadata):
+    with pytest.raises(ValueError, match="Meter readings require MeterReadingMetadata"):
+        replace(meter_batch, meter_metadata=metadata)
+
+
 def test_rejects_interval_metadata_for_tariff(
-    tariff_batch: RawBatch, field: str, value: object, message: str
+    tariff_batch: RawBatch, meter_batch: RawBatch
 ):
-    with pytest.raises(ValueError, match=message):
-        replace(tariff_batch, **{field: value})
+    with pytest.raises(ValueError, match="Tariff should not have meter metadata"):
+        replace(tariff_batch, meter_metadata=meter_batch.meter_metadata)
 
 
 @pytest.mark.parametrize("bad_row_index", [0, 1])

@@ -62,7 +62,7 @@ def write_batch(
         con.execute("""
             CREATE TABLE IF NOT EXISTS raw.ingestion_files (
             import_id UUID PRIMARY KEY,
-            provider VARCHAR,
+            source_format VARCHAR,
             source_kind VARCHAR,
             source_path VARCHAR,
             source_sha256 VARCHAR,
@@ -114,7 +114,7 @@ def write_batch(
         metadata_sql = f"""
                     INSERT INTO raw.ingestion_files (
                         import_id,
-                        provider,
+                        source_format,
                         source_kind,
                         source_path,
                         source_sha256,
@@ -126,17 +126,22 @@ def write_batch(
                         ingested_at)
                     VALUES (?::UUID, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
+        meter_metadata = batch.meter_metadata
         metadata_params = [
             str(import_id),
-            batch.provider,
+            batch.source_format,
             batch.source_kind,
             str(batch.source_path),
             source_sha256,
             pa_table.num_rows,
-            batch.timestamp_boundary,
-            batch.timestamp_timezone,
-            batch.energy_unit,
-            batch.interval_duration_minutes,
+            meter_metadata.timestamp_boundary if meter_metadata is not None else None,
+            meter_metadata.timestamp_timezone if meter_metadata is not None else None,
+            meter_metadata.energy_unit if meter_metadata is not None else None,
+            (
+                meter_metadata.interval_duration_minutes
+                if meter_metadata is not None
+                else None
+            ),
             ingested_at,
         ]
 

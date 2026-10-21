@@ -32,7 +32,7 @@ REQUIRED_FUSE_HEADERS = (
 def test_reads_fuse_fixture():
     batch = fuse.read(FIXTURE)
 
-    assert batch.provider == "fuse"
+    assert batch.source_format == "fuse_csv"
     assert batch.source_kind == "meter_readings"
 
     assert batch.headers == METER_READINGS_RAW_HEADERS
@@ -54,10 +54,11 @@ def test_reads_fuse_fixture():
         "version": "0",
     }
 
-    assert batch.timestamp_boundary == "end"
-    assert batch.timestamp_timezone == "UTC"
-    assert batch.energy_unit == "wh"
-    assert batch.interval_duration_minutes == 30
+    assert batch.meter_metadata is not None
+    assert batch.meter_metadata.timestamp_boundary == "end"
+    assert batch.meter_metadata.timestamp_timezone == "UTC"
+    assert batch.meter_metadata.energy_unit == "wh"
+    assert batch.meter_metadata.interval_duration_minutes == 30
 
 
 @pytest.mark.parametrize("missing_header", REQUIRED_FUSE_HEADERS)

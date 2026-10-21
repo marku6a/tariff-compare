@@ -48,6 +48,13 @@ dbt parses timestamps and numbers, places readings on a common interval boundary
 and tariff-cost rules. The processed file archive will retain the
 original CSV header names and file contents.
 
+Each `RawBatch` identifies its input format with `source_format` (for example,
+`fuse_csv` or `tariff_csv`). Meter batches require a `MeterReadingMetadata` object
+in `meter_metadata`, containing the timestamp boundary, timezone, energy unit,
+and interval duration. Tariff batches omit `meter_metadata`. The writer records
+`source_format` in `raw.ingestion_files` and stores the meter metadata in separate
+columns, which are null for tariffs.
+
 The package uses a `src/` layout and can be invoked with
 `uv run python -m ingestion.cli`. Provider adapters live in
 `src/ingestion/providers/`; add a new adapter when a different source export
