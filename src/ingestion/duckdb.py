@@ -7,7 +7,7 @@ import pyarrow as pa
 
 from ingestion.models import RawBatch
 from ingestion.validation import validate_batch
-from ingestion.raw_schema import METER_READINGS_RAW_HEADERS
+from ingestion.raw_schema import METER_READINGS_RAW_HEADERS, TARIFF_RAW_HEADERS
 
 
 def write_batch(
@@ -26,8 +26,8 @@ def write_batch(
         expected_headers = METER_READINGS_RAW_HEADERS
         target_table = "raw.meter_readings"
     elif batch.source_kind == "tariff":
-        # Later: select TARIFF_RAW_HEADERS and raw.tariffs here.
-        raise NotImplementedError("Tariff writing is not implemented yet")
+        expected_headers = TARIFF_RAW_HEADERS
+        target_table = "raw.tariffs"
     else:
         raise ValueError(f"Unsupported source kind: {batch.source_kind}")
 
@@ -82,9 +82,21 @@ def write_batch(
             import_id UUID,
             source_row_number BIGINT)
             """)
-        # add tariff check later
-
-    # Add raw.tariffs here when its contract is ready.
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS raw.tariffs (
+            tariff_id VARCHAR,
+            tariff_name VARCHAR,
+            supplier VARCHAR,
+            fix_length_months VARCHAR,
+            exit_fee_pounds VARCHAR,
+            standing_charge_pence_per_day VARCHAR,
+            day_type VARCHAR,
+            start_time_local VARCHAR,
+            end_time_local VARCHAR,
+            unit_rate_pence_per_kwh VARCHAR,
+            import_id UUID,
+            source_row_number BIGINT)
+            """)
 
     with duckdb.connect(database_path) as con:
         ensure_raw_tables(con)
